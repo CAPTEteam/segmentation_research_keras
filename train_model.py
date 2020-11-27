@@ -35,10 +35,10 @@ if my_file.exists():
 
 [num_train_images, num_val_images] = make_train_valid_temp(study_PATH)
 
-batch_size=2 # carefull that numer images / batch size is less than one
+batch_size=4 # carefull that number images / batch size is less than one
 img_height=512
 img_width=512
-epoch=1
+epoch=100 #can be more if you have a big datasets (more than 2000 images)
 preprocess_inputEff = sm.get_preprocessing('efficientnetb2')
 
 AUGMENTATIONS = albumentations.Compose([
@@ -81,11 +81,9 @@ unetmodel = sm.Unet(backbone_name='efficientnetb2', encoder_weights='imagenet',i
 out = unetmodel(input_layer)
 model = Model(inputs=[input_layer], outputs=out)
 #model = multi_gpu_model(model)
-#history = model.fit(x= X_train, y=Y_train, batch_size=batch_size,epochs=10000, validation_split = 0.10, callbacks=[reduce_lr,early_stopping_callback,mc]) # change checkpoint countdataset = countdataset+1
 
-#https://github.com/keras-team/keras/issues/10472 for validation generator in model.fit
 lrIni = 0.00075
-numLoop=3
+numLoop=1
 
 for i in range(0,numLoop):
     my_file = Path("temp_training/checkpoint{}.h5".format(i-1))
@@ -100,11 +98,8 @@ for i in range(0,numLoop):
     model.compile(optimizer=Adam(lr=lrIni/(10**i)), loss='binary_crossentropy', metrics = ['accuracy'])     
     print("model compiled with new learning rate")
     mc = ModelCheckpoint('temp_training/checkpoint{}.h5'.format(i), period=1, monitor='val_loss',mode='min', save_best_only=True)
-    GPUtil.showUtilization()
     model.fit_generator(train_gen,validation_data = val_gen, steps_per_epoch=num_train_images//batch_size,validation_steps = num_val_images//batch_size, epochs=epoch,callbacks=[reduce_lr,early_stopping_callback,mc])
-    GPUtil.showUtilization()
     reset_keras()
-    GPUtil.showUtilization()
 
 model_final = load_model("temp_training/checkpoint{}.h5".format(numLoop-1))
 save_model(model_final,"dev")
