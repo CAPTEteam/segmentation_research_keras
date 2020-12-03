@@ -33,24 +33,16 @@ from PIL import Image
 
 threshold=0.5
 pathImage='/home/capte-gpu-1/Documents/espaces_personnel/SIMON/simon_segmentation/Dataset_study/Phenomobile_marc/images/'
-pathImage='/home/capte-gpu-1/Documents/espaces_personnel/SIMON/simon_segmentation/IM_NEW_0/scottTEST/'
-pathImage='/media/capte-gpu-1/My Passport/DATASET/A_Ranger_Trier/P2S2_pasOk/'
-pathImage='/home/capte-gpu-1/Documents/espaces_personnel/SIMON/simon_segmentation/dataAG/images_test_debug/'
 
 preprocess_inputEff = sm.get_preprocessing('efficientnetb1')
 
 #modelPath = 'models'
 
-modelName in ['augmentationstudytemp_NoDataAug_epoch-150_dataset-GEVES-mais-veg']:
-print("")
-print('Load the model!  {}'.format(modelName))
-print("")
-print("")
+modelName = ['augmentationstudytemp_NoDataAug_epoch-150_dataset-GEVES-mais-veg']
 model = load_saved_model(modelName) #, custom_objects={'mean_iou': mean_iou})
-#model =load_model(modelName)
 
 print('fINISH TO LOAD THE MODEL!')
-print("")
+
 for imgN in glob.glob(pathImage+"*.*"):
     print(imgN)
     plt.close('all')
@@ -59,9 +51,8 @@ for imgN in glob.glob(pathImage+"*.*"):
     #mg = cv2.imread(imgN)
     img = imread(imgN, plugin='matplotlib')[:,:,:3]
     sizeIm = img.shape
-    img = resize(img, (512, 512), mode='constant', preserve_range=True)
-    #img = plt.imread(imgN,0)
-    print(np.shape(img))
+    # img = resize(img, (512, 512), mode='constant', preserve_range=True)
+    # becarefull, sometimes it is good to resize the images
 
     if np.max(img)<1.01:        
         img=img*255 # probably has to be removed
@@ -78,7 +69,6 @@ for imgN in glob.glob(pathImage+"*.*"):
         img = resize(img, (np.int(sizeIm[0]*512/sizeIm[1]), 512), mode='constant', preserve_range=True)
         
     # mettre un if en dessous à faire si seulement c'est nécessaire
-    # mettre un if au dessus à faire si seulement c'est nécessaire
     nameIm = imgN[:-4] # Enlebe le .tif .JPG .jpg
     #todo os. path ...
 
@@ -107,12 +97,14 @@ for imgN in glob.glob(pathImage+"*.*"):
     
     im = Image.fromarray(X_new*255)
     path_visu = os.fspath(os.path.join(os.path.dirname(nameIm), "visualisation_result"))
+
     """create folder for results"""
     if not os.path.exists(path_visu):
         os.mkdir(path_visu)
 
     print(os.path.dirname(nameIm))
     im.save(os.path.dirname(nameIm)+ "/visualisation_result/" + os.path.basename(nameIm) + ".png")
+    
     print(X_ground.shape)
     if np.max(img)<1.01:
         X_ground=X_ground*255
